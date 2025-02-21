@@ -60,24 +60,5 @@ namespace eventos_kankun_backend.Controllers
             else
                 return Unauthorized(result); // Error en el login
         }
-
-        // Autenticación con Google
-        [HttpPost("login-google")]
-        public async Task<IActionResult> LoginGoogle([FromBody] GoogleLoginRequest request)
-        {
-            if (request == null || string.IsNullOrEmpty(request.TokenId))
-                return BadRequest(new { Success = false, Message = "El token de Google no es válido." });
-
-            var result = await _authService.LoginGoogleAsync(request.TokenId);
-
-            if (result.Success)
-                return Ok(result); // Login exitoso
-            else
-                return Unauthorized(result); // Error en el login con Google
-        }
     }
-
-    // Modelos para las solicitudes
-
-    
 }
