@@ -1,24 +1,32 @@
-using EventosAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using EventosKankun.Models;
 
-namespace EventosAPI.Data
+namespace EventosKankun.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
 
-        public DbSet<Evento> Eventos { get; set; }
+        public DbSet<Participante> Participantes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Evento>().ToTable("Eventos");
+            modelBuilder.Entity<Participante>()
+                .HasOne(p => p.Usuario)
+                .WithMany()
+                .HasForeignKey(p => p.UsuarioID)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // Especificamos precisión y escala para la propiedad 'Costo'
-            modelBuilder.Entity<Evento>()
-                .Property(e => e.Costo)
-                .HasColumnType("decimal(10,2)"); // 10 dígitos en total, 2 de ellos después del punto decimal
+            modelBuilder.Entity<Participante>()
+                .HasOne(p => p.Evento)
+                .WithMany()
+                .HasForeignKey(p => p.EventoID)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
