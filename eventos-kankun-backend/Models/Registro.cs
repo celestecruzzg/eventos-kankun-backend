@@ -16,17 +16,11 @@
         public string ApMaterno { get; set; }
         public string Email { get; set; }
         public string Contrasena { get; set; }
-        public string RolAdmin { get; set; } // Información adicional si es necesario para un administrador
     }
 
     public class LoginRequest
     {
         public string Email { get; set; }
         public string Contrasena { get; set; }
-    }
-
-    public class GoogleLoginRequest
-    {
-        public string TokenId { get; set; }
     }
 }

@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configuración de servicios
 builder.Services.AddControllers();
+builder.Services.AddSingleton<EmailService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -18,12 +19,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReactFrontend", policy =>
     {
         policy.WithOrigins("http://localhost:3000");
-              policy.AllowAnyHeader();
-              policy.AllowAnyMethod();
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
     });
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowASPNETCore", policy =>
     {
-        policy.AllowAnyOrigin();
+        policy.WithOrigins("http://localhost:5223");
         policy.AllowAnyHeader();
         policy.AllowAnyMethod();
     });
@@ -48,15 +49,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Autenticación con Google
-builder.Services.AddAuthentication()
-    .AddGoogle(options =>
-    {
-        options.ClientId = builder.Configuration["Google:ClientId"];
-        options.ClientSecret = builder.Configuration["Google:ClientSecret"];
-        options.CallbackPath = "/signin-google";
-    });
-
 var app = builder.Build();
 
 // Configuración del pipeline
@@ -69,7 +61,6 @@ if (app.Environment.IsDevelopment())
         c.RoutePrefix = string.Empty;  // Esto coloca Swagger UI en la raíz
     });
 }
-
 
 app.UseCors("AllowReactFrontend");
 app.UseAuthentication();
