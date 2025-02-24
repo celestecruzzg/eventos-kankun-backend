@@ -17,7 +17,7 @@ namespace eventos_kankun_backend.Controllers
         }
 
         // Registro de un participante
-        [HttpPost("register-participant")]
+        [HttpPost("register-participant")] //Insertar un nuevo participante
         public async Task<IActionResult> RegisterParticipant([FromBody] RegistroParticipanteRequest request)
         {
             if (request == null)
