@@ -12,8 +12,8 @@ using eventos_kankun_backend.Data;
 namespace eventos_kankun_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250221010313_MigracionDB")]
-    partial class MigracionDB
+    [Migration("20250225094618_MakeCodigoVerificacion2FANullable")]
+    partial class MakeCodigoVerificacion2FANullable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -246,10 +246,10 @@ namespace eventos_kankun_backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Autenticacion2FA")
-                        .HasColumnType("bit");
+                    b.Property<string>("CodigoVerificacion2FA")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CodigoVerificacion")
+                    b.Property<string>("CodigoVerificacionRegistro")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

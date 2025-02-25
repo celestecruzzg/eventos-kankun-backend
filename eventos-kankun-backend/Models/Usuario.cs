@@ -25,9 +25,9 @@ namespace eventos_kankun_backend.Models
         [Required(ErrorMessage = "El tipo de usuario es obligatorio.")]
         public string TipoUsuario { get; set; } // "Administrador" o "Participante"
 
-        public bool Autenticacion2FA { get; set; } = false;
+        public string? CodigoVerificacion2FA { get; set; }
 
-        public string CodigoVerificacion { get; set; } // Para verificación por correo
+        public string CodigoVerificacionRegistro { get; set; } // Para verificación por correo
         public bool Verificado { get; set; } = false; // Indica si el usuario ha verificado su correo
     }
 }
