@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using eventos_kankun_backend.Data;
 
@@ -11,9 +12,11 @@ using eventos_kankun_backend.Data;
 namespace eventos_kankun_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250225093132_nuevoscampos")]
+    partial class nuevoscampos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -244,6 +247,7 @@ namespace eventos_kankun_backend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CodigoVerificacion2FA")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CodigoVerificacionRegistro")

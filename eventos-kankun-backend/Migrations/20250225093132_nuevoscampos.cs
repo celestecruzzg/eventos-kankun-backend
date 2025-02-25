@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace eventos_kankun_backend.Migrations
 {
     /// <inheritdoc />
-    public partial class MigracionDB : Migration
+    public partial class nuevoscampos : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -68,8 +68,8 @@ namespace eventos_kankun_backend.Migrations
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Contrasena = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TipoUsuario = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Autenticacion2FA = table.Column<bool>(type: "bit", nullable: false),
-                    CodigoVerificacion = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CodigoVerificacion2FA = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CodigoVerificacionRegistro = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Verificado = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>

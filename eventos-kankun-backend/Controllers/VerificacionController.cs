@@ -39,7 +39,7 @@ namespace eventos_kankun_backend.Controllers
                 return BadRequest(new { success = false, message = "Usuario no encontrado." });
             }
 
-            if (usuario.CodigoVerificacion == request.Codigo)
+            if (usuario.CodigoVerificacionRegistro == request.Codigo)
             {
                 usuario.Verificado = true;
                 _context.Usuarios.Update(usuario);

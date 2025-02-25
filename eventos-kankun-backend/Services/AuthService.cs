@@ -26,14 +26,12 @@ public class AuthService
         _configuration = configuration;
     }
 
-    // Método para generar código de verificación
     private string GenerarCodigoVerificacion()
     {
         var guid = Guid.NewGuid();
         return guid.ToString("N").Substring(0, 6).ToUpper();
     }
 
-    // Método para enviar el correo de verificación
     private async Task EnviarCorreoVerificacionAsync(string nombre, string email, string codigoVerificacion)
     {
         var message = new MimeMessage();
@@ -53,26 +51,22 @@ public class AuthService
                 await client.AuthenticateAsync(_configuration["Smtp:Username"], _configuration["Smtp:Password"]);
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
-                Console.WriteLine("Correo enviado correctamente.");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error enviando correo: {ex.Message}");
-                Console.WriteLine($"StackTrace: {ex.StackTrace}");
-                throw; // Re-lanza la excepción para que no se pierda en el flujo
+                throw;
             }
         }
     }
 
-    // Verificar si el correo ya está registrado
     private async Task<bool> ExisteCorreoAsync(string email)
     {
         var usuarioExistente = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
         return usuarioExistente != null;
     }
 
-    // Método para generar el token JWT
-    private string GenerarToken(Usuario usuario)
+    public string GenerarToken(Usuario usuario)
     {
         var claims = new[]
         {
@@ -96,7 +90,6 @@ public class AuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    // Registrar Participante
     public async Task<AuthResult> RegistrarParticipanteAsync(RegistroParticipanteRequest request)
     {
         if (await ExisteCorreoAsync(request.Email))
@@ -115,7 +108,8 @@ public class AuthService
             Contrasena = BCrypt.Net.BCrypt.HashPassword(request.Contrasena),
             TipoUsuario = "Participante",
             Verificado = false,
-            CodigoVerificacion = codigoVerificacion
+            CodigoVerificacionRegistro = codigoVerificacion,
+            CodigoVerificacion2FA = null
         };
 
         _context.Usuarios.Add(usuario);
@@ -126,7 +120,6 @@ public class AuthService
         return new AuthResult { Success = true, Message = "Registro exitoso. Verifica tu correo." };
     }
 
-    // Registrar Administrador
     public async Task<AuthResult> RegistrarAdminAsync(RegistroAdminRequest request)
     {
         if (await ExisteCorreoAsync(request.Email))
@@ -145,7 +138,8 @@ public class AuthService
             Contrasena = BCrypt.Net.BCrypt.HashPassword(request.Contrasena),
             TipoUsuario = "Admin",
             Verificado = false,
-            CodigoVerificacion = codigoVerificacion
+            CodigoVerificacionRegistro = codigoVerificacion,
+            CodigoVerificacion2FA = null
         };
 
         _context.Usuarios.Add(usuario);
@@ -156,16 +150,21 @@ public class AuthService
         return new AuthResult { Success = true, Message = "Registro exitoso. Verifica tu correo." };
     }
 
-    // Login para ambos roles
     public async Task<AuthResult> LoginAsync(string email, string contrasena)
     {
         var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+
         if (usuario == null || !BCrypt.Net.BCrypt.Verify(contrasena, usuario.Contrasena))
             return new AuthResult { Success = false, Message = "Credenciales inválidas." };
 
-        // Generar token JWT
-        var token = GenerarToken(usuario);
+        if (!usuario.Verificado)
+            return new AuthResult { Success = false, Message = "Por favor, verifica tu correo antes de iniciar sesión." };
 
-        return new AuthResult { Success = true, Message = "Inicio de sesión exitoso.", Token = token, Usuario = usuario };
+        usuario.CodigoVerificacion2FA = GenerarCodigoVerificacion();
+        await _context.SaveChangesAsync();
+
+        await EnviarCorreoVerificacionAsync(usuario.Nombre, usuario.Email, usuario.CodigoVerificacion2FA);
+
+        return new AuthResult { Success = true, Message = "Se ha enviado un código de verificación a tu correo. Ingrésalo para completar el inicio de sesión." };
     }
 }
