@@ -1,6 +1,6 @@
-﻿using eventos_kankun_backend.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using eventos_kankun_backend.Models;
 using eventos_kankun_backend.Services;
-using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 namespace eventos_kankun_backend.Controllers
@@ -17,13 +17,13 @@ namespace eventos_kankun_backend.Controllers
         }
 
         // Registro de un participante
-        [HttpPost("register-participant")] //Insertar un nuevo participante
-        public async Task<IActionResult> RegisterParticipant([FromBody] RegistroParticipanteRequest request)
+        [HttpPost("register-participant")]
+        public async Task<IActionResult> RegisterParticipant([FromBody] RegistroRequest request)
         {
             if (request == null)
                 return BadRequest(new { Success = false, Message = "Los datos del registro no son válidos." });
 
-            var result = await _authService.RegistrarParticipanteAsync(request);
+            var result = await _authService.RegistrarUsuarioAsync(request);
 
             if (result.Success)
                 return Ok(result); // Registro exitoso
@@ -33,12 +33,12 @@ namespace eventos_kankun_backend.Controllers
 
         // Registro de un administrador
         [HttpPost("register-admin")]
-        public async Task<IActionResult> RegisterAdmin([FromBody] RegistroAdminRequest request)
+        public async Task<IActionResult> RegisterAdmin([FromBody] RegistroRequest request)
         {
             if (request == null)
                 return BadRequest(new { Success = false, Message = "Los datos del registro no son válidos." });
 
-            var result = await _authService.RegistrarAdminAsync(request); // Método específico para admins
+            var result = await _authService.RegistrarUsuarioAsync(request); // Usar el mismo método para ambos roles
 
             if (result.Success)
                 return Ok(result); // Registro exitoso
@@ -46,7 +46,7 @@ namespace eventos_kankun_backend.Controllers
                 return BadRequest(result); // Error en el registro
         }
 
-        // Login para los participantes
+        // Login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {

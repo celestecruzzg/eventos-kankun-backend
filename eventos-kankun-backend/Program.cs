@@ -1,40 +1,119 @@
+using eventos_kankun_backend.Data;
+using eventos_kankun_backend.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using EventosAPI.Data;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar DbContext con SQL Server
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+// Configuraci贸n de servicios
+builder.Services.AddControllers();
+
+// Configuraci贸n del servicio de correo electr贸nico
+builder.Services.AddSingleton<EmailService>();
+
+// Configuraci贸n del servicio de autenticaci贸n
+builder.Services.AddScoped<AuthService>();
+
+// Configuraci贸n del DbContext para Entity Framework Core
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Agregar controladores y configuraci髇 de Swagger
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+// Configuraci贸n de Swagger
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Eventos Kankun API", Version = "v1" });
+
+    // Configuraci贸n de Swagger para JWT
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Title = "Eventos API",
-        Version = "v1",
-        Description = "API para la gesti髇 de eventos en ASP.NET Core"
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
     });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+// Configuraci贸n de CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // Permite solicitudes desde el frontend de React
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+    });
+
+    options.AddPolicy("AllowASPNETCore", policy =>
+    {
+        policy.WithOrigins("http://localhost:5223") // Permite solicitudes desde el backend de ASP.NET Core
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+    });
+});
+
+// Configuraci贸n de autenticaci贸n JWT
+var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
 });
 
 var app = builder.Build();
 
-// Configurar middleware
+// Configuraci贸n del pipeline de la aplicaci贸n
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Eventos API v1");
-        c.RoutePrefix = string.Empty; // Para acceder a Swagger en la ra韟
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+        c.RoutePrefix = string.Empty;  // Coloca Swagger UI en la ra铆z
     });
 }
 
-app.UseRouting();
+// Habilitar CORS
+app.UseCors("AllowReactFrontend");
+
+// Habilitar autenticaci贸n y autorizaci贸n
+app.UseAuthentication();
 app.UseAuthorization();
+
+// Mapear controladores
 app.MapControllers();
+
+// Iniciar la aplicaci贸n
 app.Run();
